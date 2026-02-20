@@ -11,6 +11,7 @@ from app.calculations import (
 from app.posthog import get_real_daily_credit_usage
 from app.tavily import get_tavily_remaining_credits
 from app.fullenrich import get_fullenrich_remaining_credits
+from app.anthropic import get_anthropic_remaining_credits
 import io
 import csv
 import boto3
@@ -30,6 +31,7 @@ FULLENRICH_USAGE_URL = os.getenv("FULLENRICH_USAGE_URL", "https://api.fullenrich
 # Debug prints — AFTER variables are defined
 print("[DEBUG] TAVILY_API_KEY loaded:", TAVILY_API_KEY[:10] + "..." if TAVILY_API_KEY else "None")
 print("[DEBUG] FULLENRICH_API_KEY loaded:", FULLENRICH_API_KEY[:10] + "..." if FULLENRICH_API_KEY else "None")
+print("[DEBUG] ANTHROPIC_ADMIN_KEY loaded:", (os.getenv("ANTHROPIC_ADMIN_KEY")[:10] if os.getenv("ANTHROPIC_ADMIN_KEY") else "None") + "...")
 
 def fetch_real_aws_spend(days: int = 30) -> dict:
     try:
@@ -125,11 +127,13 @@ async def get_dashboard(days: int = Query(30, ge=1, le=90)):
     for row in tools_rows:
         name, credits_db, percent, daily_db = row
 
-        # Use real API for Tavily & FullEnrich
+        # Real API for Tavily, FullEnrich, Anthropic
         if name == "Tavily":
             credits = get_tavily_remaining_credits()
         elif name == "FullEnrich":
             credits = get_fullenrich_remaining_credits()
+        elif name == "Anthropic":
+            credits = get_anthropic_remaining_credits()
         else:
             credits = float(credits_db or 0)
 
